@@ -1,8 +1,18 @@
 import React, { useState } from 'react'
 import { Link } from 'react-router-dom'
 import robotImg from '../../../assets/robot.png'
+import aiImg from '../../../assets/Artificial intelligence.png'
 
 const LoginPage: React.FC = () => {
+  const glowStyles = `
+    @keyframes glow {
+      0%, 100% { filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.5)); }
+      50% { filter: drop-shadow(0 0 20px rgba(255, 255, 255, 0.8)); }
+    }
+    .logo-glow {
+      animation: glow 3s ease-in-out infinite;
+    }
+  `
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [rememberMe, setRememberMe] = useState(false)
@@ -14,18 +24,32 @@ const LoginPage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-[#292828] flex items-center justify-center p-2 sm:p-4">
+    <div className="min-h-screen bg-[#292828] flex flex-col items-center justify-center p-3 sm:p-4 md:p-6">
+      <style>{glowStyles}</style>
+
+      {/* AI Logo - Visible on Mobile, Top Center */}
+      <div className="md:hidden mb-8 sm:mb-10">
+        <img
+          src={aiImg}
+          alt="Artificial Intelligence Logo"
+          className="logo-glow w-20 sm:w-24 h-20 sm:h-24 object-cover rounded-full shadow-2xl"
+        />
+      </div>
+
       <div className="w-full max-w-7xl bg-[#181818] rounded-3xl shadow-2xl overflow-hidden grid grid-cols-1 md:grid-cols-2">
         {/* Left Section */}
         <div className="bg-[#181818] p-6 sm:p-8 md:p-12 lg:p-16 xl:p-20 flex flex-col justify-center">
-          <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white mb-2">
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white mb-1 sm:mb-2">
             Welcome Back
           </h1>
-          <p className="text-gray-400 text-sm sm:text-base mb-6 md:mb-8">
+          <p className="text-gray-400 text-xs sm:text-sm md:text-base mb-6 md:mb-8">
             Sign in to your account to continue
           </p>
 
-          <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-5 md:space-y-6">
+          <form
+            onSubmit={handleSubmit}
+            className="space-y-3 sm:space-y-4 md:space-y-5 lg:space-y-6"
+          >
             {/* Email Input */}
             <div>
               <label
@@ -40,7 +64,7 @@ const LoginPage: React.FC = () => {
                 value={email}
                 onChange={e => setEmail(e.target.value)}
                 placeholder="you@example.com"
-                className="w-full px-3 sm:px-4 py-2 sm:py-2 bg-[#181818] border border-gray-600 rounded-lg text-sm sm:text-base text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-white focus:border-transparent transition"
+                className="w-full px-3 sm:px-4 py-2 sm:py-2.5 bg-[#1a1a1a] border border-gray-600 rounded-lg text-sm sm:text-base text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-white focus:border-transparent transition"
                 required
               />
             </div>
@@ -59,7 +83,7 @@ const LoginPage: React.FC = () => {
                 value={password}
                 onChange={e => setPassword(e.target.value)}
                 placeholder="••••••••"
-                className="w-full px-3 sm:px-4 py-2 sm:py-2 bg-[#181818] border border-gray-600 rounded-lg text-sm sm:text-base text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-white focus:border-transparent transition"
+                className="w-full px-3 sm:px-4 py-2 sm:py-2.5 bg-[#1a1a1a] border border-gray-600 rounded-lg text-sm sm:text-base text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-white focus:border-transparent transition"
                 required
               />
 
@@ -76,7 +100,7 @@ const LoginPage: React.FC = () => {
                 </label>
                 <Link
                   to="/forgot-password"
-                  className="text-white hover:text-gray-500 hover:underline text-xs sm:text-sm transition-all duration-200"
+                  className="text-gray-300 hover:text-white hover:underline text-xs sm:text-sm transition-all duration-200"
                 >
                   Forgot password?
                 </Link>
@@ -86,7 +110,7 @@ const LoginPage: React.FC = () => {
             {/* Submit Button */}
             <button
               type="submit"
-              className="w-full bg-gray-500 hover:bg-gray-700 text-black font-medium py-2 sm:py-2.5 text-sm sm:text-base rounded-lg transition-colors duration-200 mt-2 sm:mt-3 md:mt-4"
+              className="w-full bg-gray-500 hover:bg-gray-700 text-black font-semibold py-2 sm:py-2.5 text-sm sm:text-base rounded-lg transition-colors duration-200 mt-4 sm:mt-5 md:mt-6"
             >
               Log In
             </button>
@@ -96,7 +120,7 @@ const LoginPage: React.FC = () => {
             Don't have an account?{' '}
             <Link
               to="/register"
-              className="text-white hover:text-white hover:underline transition-all duration-200"
+              className="text-white hover:text-gray-300 hover:underline transition-all duration-200"
             >
               Create Account
             </Link>
