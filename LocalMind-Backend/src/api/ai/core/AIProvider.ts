@@ -4,7 +4,7 @@ import { AICapability } from './types'
 
 export interface AIProvider {
   readonly name: string
-  readonly capabilities: AICapability[]
+  readonly capabilities: ReadonlySet<AICapability>
 
   generateText(input: {
     prompt: string
