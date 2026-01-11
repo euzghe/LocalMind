@@ -1,7 +1,11 @@
 import React, { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import robotImg from '../../../assets/login.png'
+import React, { useState, useEffect } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
+import robotImg from '../../../assets/robot.png'
 import aiImg from '../../../assets/Artificial intelligence.png'
+import apiService from '../../../core/api.service'
 
 const LoginPage: React.FC = () => {
   const navigate = useNavigate()
@@ -18,6 +22,7 @@ const LoginPage: React.FC = () => {
   const [password, setPassword] = useState('')
   const [rememberMe, setRememberMe] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
 
@@ -69,13 +74,49 @@ const LoginPage: React.FC = () => {
       setLoading(false)
     }
   }
+    setIsLoading(true)
 
-  return (
-    <div className="min-h-screen bg-[#292828] flex flex-col items-center justify-center p-3 sm:p-4 md:p-6">
-      <style>{glowStyles}</style>
+    try {
+      const response = await apiService.login(email, password)
 
-      {/* AI Logo - Visible on Mobile, Top Center */}
-      <div className="md:hidden mb-8 sm:mb-10">
+      if (!response.success) {
+        throw new Error(response.message || 'Login failed. Please try again.')
+      }
+
+      setSuccess('Login successful! Redirecting...')
+
+      // Store token if provided
+      if (response.data?.token) {
+        localStorage.setItem('authToken', response.data.token)
+      }
+
+      // Store user info if remember me is checked
+      if (rememberMe) {
+        localStorage.setItem('rememberedEmail', email)
+      } else {
+        localStorage.removeItem('rememberedEmail')
+      }
+
+      // Redirect to dashboard after a short delay
+      setTimeout(() => {
+        navigate('/dashboard')
+      }, 1000)
+    } catch (err: any) {
+      setError(err.message || 'An error occurred during login. Please try again.')
+      console.error('Login error:', err)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  // Load remembered email on component mount
+  useEffect(() => {
+    const rememberedEmail = localStorage.getItem('rememberedEmail')
+    if (rememberedEmail) {
+      setEmail(rememberedEmail)
+      setRememberMe(true)
+    }
+  }, [])
         <img
           src={aiImg}
           alt="Artificial Intelligence Logo"
@@ -101,6 +142,8 @@ const LoginPage: React.FC = () => {
             {error && (
               <div className="p-3 sm:p-4 bg-red-900 bg-opacity-30 border border-red-500 rounded-lg">
                 <p className="text-red-400 text-xs sm:text-sm">{error}</p>
+              <div className="p-3 bg-red-900 border border-red-700 rounded-lg text-red-100 text-xs sm:text-sm">
+                {error}
               </div>
             )}
 
@@ -108,6 +151,8 @@ const LoginPage: React.FC = () => {
             {success && (
               <div className="p-3 sm:p-4 bg-green-900 bg-opacity-30 border border-green-500 rounded-lg">
                 <p className="text-green-400 text-xs sm:text-sm">{success}</p>
+              <div className="p-3 bg-green-900 border border-green-700 rounded-lg text-green-100 text-xs sm:text-sm">
+                {success}
               </div>
             )}
 
@@ -128,6 +173,7 @@ const LoginPage: React.FC = () => {
                 className="w-full px-4 py-2.5 bg-[#2a2a2a] border border-gray-600 rounded-lg text-sm sm:text-base text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:border-transparent transition disabled:opacity-50"
                 required
                 disabled={loading}
+                disabled={isLoading}
               />
             </div>
 
@@ -148,6 +194,7 @@ const LoginPage: React.FC = () => {
                 className="w-full px-4 py-2.5 bg-[#2a2a2a] border border-gray-600 rounded-lg text-sm sm:text-base text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:border-transparent transition disabled:opacity-50"
                 required
                 disabled={loading}
+                disabled={isLoading}
               />
 
               {/* Remember Me & Forgot Password */}
@@ -159,6 +206,8 @@ const LoginPage: React.FC = () => {
                     onChange={e => setRememberMe(e.target.checked)}
                     className="w-4 h-4 bg-gray-700 border border-gray-600 rounded cursor-pointer accent-gray-500 disabled:opacity-50"
                     disabled={loading}
+                    className="w-4 h-4 bg-gray-700 border border-gray-600 rounded cursor-pointer accent-gray-500"
+                    disabled={isLoading}
                   />
                   <span className="text-gray-300 text-xs sm:text-sm">Remember me</span>
                 </label>
@@ -185,6 +234,14 @@ const LoginPage: React.FC = () => {
               ) : (
                 'Log In'
               )}
+              disabled={isLoading}
+              className={`w-full font-bold py-2.5 text-sm sm:text-base rounded-lg transition-colors duration-200 mt-6 sm:mt-7 md:mt-8 ${
+                isLoading
+                  ? 'bg-gray-600 text-gray-300 cursor-not-allowed'
+                  : 'bg-gray-400 hover:bg-gray-500 text-black'
+              }`}
+            >
+              {isLoading ? 'Logging in...' : 'Log In'}
             </button>
           </form>
 
