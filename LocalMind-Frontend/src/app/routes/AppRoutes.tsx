@@ -3,8 +3,8 @@ import { Route, Routes } from 'react-router-dom'
 import HomePage from '../../features/Dashboard/V1/Component/Pages/HomePage'
 import SignUp from '../../features/Auth/SignUp'
 import LoginPage from '../../shared/component/v1/LoginPage'
-import ForgotPassword from '../../features/Auth/ForgotPassword'
-import ResetPassword from '../../features/Auth/ResetPassword'
+import ForgotPwd from '../../shared/component/v1/ForgotPwd'
+import ResetPassword from '../../shared/component/v1/ResetPassword'
 
 const AppRoutes: React.FC = () => {
   return (
@@ -18,8 +18,16 @@ const AppRoutes: React.FC = () => {
       <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/reset-password/:token" element={<ResetPassword />} />
 
-      {/* Legacy Redirects or Placeholders from Upstream */}
-      <Route path="/register" element={<SignUp />} />
+      {/* Register Page - TODO: Create dedicated RegisterPage component */}
+      <Route path="/register" element={<LoginPage />} />
+
+      {/* Forgot Password Page */}
+      <Route path="/forgot-password" element={<ForgotPwd />} />
+
+      {/* Reset Password Page */}
+      <Route path="/reset-password/:token" element={<ResetPassword />} />
+
+      {/* Chat Page */}
     </Routes>
   )
 }

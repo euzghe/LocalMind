@@ -61,11 +61,13 @@ const userSchema: Schema<IUser> = new Schema<IUser>(
     },
     resetPasswordToken: {
       type: String,
-      select: false, // Do not return by default
+      default: null,
+      select: false,
     },
     resetPasswordExpire: {
       type: Date,
-      select: false, // Do not return by default
+      default: null,
+      select: false,
     },
   },
   { timestamps: true }

@@ -1,5 +1,5 @@
 import { Request, Response } from 'express'
-import { userLoginSchema, userRegisterSchema } from './user.validator'
+import { userLoginSchema, userRegisterSchema, forgotPasswordSchema, resetPasswordSchema } from './user.validator'
 import userService from './user.service'
 import { SendResponse } from '../../../utils/SendResponse.utils'
 import UserUtils from './user.utils'
@@ -7,6 +7,9 @@ import { IUser } from './user.type'
 import jwt from 'jsonwebtoken'
 import UserConstant from './user.constant'
 import { StatusConstant } from '../../../constant/Status.constant'
+import passwordResetService from '../../../services/password-reset.service'
+import emailService from '../../../utils/email.utils'
+import { env } from '../../../constant/env.constant'
 
 class UserController {
   constructor() {
@@ -155,36 +158,105 @@ class UserController {
     }
   }
 
+  /**
+   * Forgot Password - Initiate password reset
+   * POST /api/auth/forgot-password
+   * Body: { email: string }
+   */
   async forgotPassword(req: Request, res: Response): Promise<void> {
     try {
-      const { email } = req.body
-      if (!email) {
-        throw new Error(UserConstant.INVALID_CREDENTIALS) // Or "Email is required"
+      // Validate input
+      const validatedData = await forgotPasswordSchema.parseAsync(req.body)
+
+      // Initiate password reset
+      const resetToken = await passwordResetService.initiatePasswordReset(validatedData.email)
+
+      // Build reset link
+      // Note: The frontend URL should be configured via environment variable
+      const resetLink = `${env.FRONTEND_URL || 'http://localhost:3000'}/reset-password/${resetToken}`
+
+      // Send email with reset link (async, don't wait)
+      if (resetToken) {
+        emailService.sendPasswordResetEmail(validatedData.email, resetLink).catch((err) => {
+          console.error('Failed to send password reset email:', err)
+          // Error is not exposed to user (security)
+        })
       }
 
-      await userService.forgotPassword(email)
-
-      // Always return success to prevent email enumeration
-      SendResponse.success(res, 'If the email exists, a reset link has been sent.', null, 200)
+      // Always return success message (don't reveal if email exists)
+      SendResponse.success(res, UserConstant.FORGOT_PASSWORD_SUCCESS, {}, StatusConstant.OK)
     } catch (err: any) {
-      SendResponse.error(res, err.message || UserConstant.SERVER_ERROR, 500, err)
+      if (err?.name === 'ZodError') {
+        SendResponse.error(res, UserConstant.INVALID_CREDENTIALS, StatusConstant.BAD_REQUEST, err)
+        return
+      }
+
+      // Log error but return generic message
+      console.error('Forgot password error:', err)
+      SendResponse.success(res, UserConstant.FORGOT_PASSWORD_SUCCESS, {}, StatusConstant.OK)
     }
   }
 
+  /**
+   * Reset Password - Complete password reset with token
+   * POST /api/auth/reset-password/:token
+   * Body: { password: string }
+   */
   async resetPassword(req: Request, res: Response): Promise<void> {
     try {
+      // Get token from URL params
       const { token } = req.params
-      const { password } = req.body
 
-      if (!token || !password) {
-        throw new Error(UserConstant.INVALID_CREDENTIALS)
+      if (!token) {
+        SendResponse.error(
+          res,
+          UserConstant.RESET_PASSWORD_TOKEN_MISSING,
+          StatusConstant.BAD_REQUEST
+        )
+        return
       }
 
-      await userService.resetPassword(token, password)
+      // Validate password input
+      const validatedData = await resetPasswordSchema.parseAsync(req.body)
 
-      SendResponse.success(res, UserConstant.PASSWORD_RESET_SUCCESS, null, 200)
+      // Verify token
+      const user = await passwordResetService.verifyResetToken(token)
+
+      if (!user) {
+        SendResponse.error(
+          res,
+          UserConstant.INVALID_OR_EXPIRED_TOKEN,
+          StatusConstant.UNAUTHORIZED
+        )
+        return
+      }
+
+      // Reset password
+      const success = await passwordResetService.resetPassword(token, validatedData.password)
+
+      if (!success) {
+        SendResponse.error(
+          res,
+          UserConstant.PASSWORD_RESET_FAILED,
+          StatusConstant.INTERNAL_SERVER_ERROR
+        )
+        return
+      }
+
+      SendResponse.success(res, UserConstant.RESET_PASSWORD_SUCCESS, {}, StatusConstant.OK)
     } catch (err: any) {
-      SendResponse.error(res, err.message || UserConstant.PASSWORD_RESET_FAILED, 500, err)
+      if (err?.name === 'ZodError') {
+        SendResponse.error(res, err.message || UserConstant.INVALID_INPUT, StatusConstant.BAD_REQUEST, err)
+        return
+      }
+
+      console.error('Reset password error:', err)
+      SendResponse.error(
+        res,
+        UserConstant.PASSWORD_RESET_FAILED,
+        StatusConstant.INTERNAL_SERVER_ERROR,
+        err
+      )
     }
   }
 }

@@ -6,7 +6,6 @@ import userMiddleware from './user.middleware'
 
 router.post('/v1/auth/signup', userController.register)
 router.post('/v1/user/login', userController.login)
-
 router.post('/v1/auth/forgot-password', userController.forgotPassword)
 router.post('/v1/auth/reset-password/:token', userController.resetPassword)
 
